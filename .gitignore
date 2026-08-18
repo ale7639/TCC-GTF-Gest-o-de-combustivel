@@ -2,6 +2,7 @@
 /backend/.env
 /backend/.env.backup
 /backend/composer-setup.php
+/backend/composer.phar
 /backend/bootstrap/cache/*.php
 /backend/storage/logs/*.log
 /backend/storage/framework/cache/data/

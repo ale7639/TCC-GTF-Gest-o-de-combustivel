@@ -1,0 +1,16 @@
+/backend/vendor/
+/backend/.env
+/backend/.env.backup
+/backend/composer-setup.php
+/backend/bootstrap/cache/*.php
+/backend/storage/logs/*.log
+/backend/storage/framework/cache/data/
+/backend/storage/framework/sessions/
+/backend/storage/framework/views/
+/backend/public/storage
+/frontend/node_modules/
+/frontend/dist/
+/.tools/
+.DS_Store
+Thumbs.db
+*.log

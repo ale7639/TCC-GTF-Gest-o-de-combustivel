@@ -4,6 +4,7 @@
 /backend/composer-setup.php
 /backend/composer.phar
 /backend/bootstrap/cache/*.php
+/backend/database/*.sqlite
 /backend/storage/logs/*.log
 /backend/storage/framework/cache/data/
 /backend/storage/framework/sessions/

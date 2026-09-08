@@ -4,6 +4,7 @@ use App\Http\Controllers\Api\AlertController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\DashboardController;
 use App\Http\Controllers\Api\FuelingController;
+use App\Http\Controllers\Api\FuelTankController;
 use App\Http\Controllers\Api\MaintenanceController;
 use App\Http\Controllers\Api\ReportController;
 use App\Http\Controllers\Api\TruckController;
@@ -37,6 +38,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::get('/fuelings/limits', [FuelingController::class, 'limits']);
     Route::post('/fuelings', [FuelingController::class, 'store']);
+    Route::post('/tank/refill', [FuelTankController::class, 'refill'])->middleware('role:administrador');
 
     Route::get('/trucks/{truck}/maintenances', [MaintenanceController::class, 'index']);
     Route::post('/trucks/{truck}/maintenances', [MaintenanceController::class, 'store'])

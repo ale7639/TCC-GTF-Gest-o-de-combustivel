@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
+import { Navigate, useNavigate, useParams } from 'react-router-dom'
 import api from '../api/client'
 import { apiMessage, fieldError } from '../utils/format'
 import { isValidPlate, normalizePlate } from '../utils/plate'
+import { useAuth } from '../context/AuthContext'
 
 const empty = {
   plate: '', name: '', model: '', fuel_type: 'Diesel S10', tank_capacity: 1200,
@@ -10,21 +11,26 @@ const empty = {
   crlv_expires_at: '', insurance_expires_at: '', license_expires_at: '',
 }
 
+function dateValue(value) {
+  return value ? String(value).slice(0, 10) : ''
+}
+
 export default function TruckForm() {
   const { id } = useParams()
+  const { isAdmin } = useAuth()
   const navigate = useNavigate()
   const [form, setForm] = useState(empty)
   const [error, setError] = useState('')
   const [plateMsg, setPlateMsg] = useState('')
-  const [models, setModels] = useState([])
   const [drivers, setDrivers] = useState([])
   const [loading, setLoading] = useState(false)
 
   useEffect(() => {
+    if (!isAdmin) return
     api.get('/users').then(({ data }) => {
       setDrivers((data.data || []).filter((user) => user.role === 'motorista' && user.is_active !== false))
     }).catch(() => {})
-  }, [])
+  }, [isAdmin])
 
   useEffect(() => {
     if (!id) return
@@ -34,16 +40,12 @@ export default function TruckForm() {
         ...empty,
         ...truck,
         driver_id: truck.driver?.id || '',
+        crlv_expires_at: dateValue(truck.crlv_expires_at),
+        insurance_expires_at: dateValue(truck.insurance_expires_at),
+        license_expires_at: dateValue(truck.license_expires_at),
       })
-    })
+    }).catch((err) => setError(apiMessage(err, 'Não foi possível carregar o caminhão.')))
   }, [id])
-
-  useEffect(() => {
-    fetch('https://brasilapi.com.br/api/fipe/marcas/v1/caminhoes')
-      .then((res) => res.json())
-      .then((data) => setModels((data || []).slice(0, 40).map((item) => item.nome)))
-      .catch(() => {})
-  }, [])
 
   function set(key, value) {
     setForm((current) => ({ ...current, [key]: value }))
@@ -57,7 +59,7 @@ export default function TruckForm() {
       return
     }
     try {
-      const { data } = await api.get('/trucks/check-plate', { params: { plate } })
+      const { data } = await api.get('/trucks/check-plate', { params: { plate, ignore_id: id || undefined } })
       setPlateMsg(data.message)
       setError(data.available ? '' : data.message)
     } catch (err) {
@@ -98,13 +100,15 @@ export default function TruckForm() {
     }
   }
 
+  if (!isAdmin) return <Navigate to="/app/frota" replace />
+
   return (
     <div className="scroll">
       <div className="topbar">
         <button className="btn btn-ghost" onClick={() => navigate(-1)}>Voltar</button>
       </div>
       <h1>{id ? 'Editar caminhão' : 'Cadastrar caminhão'}</h1>
-      <p className="muted">Placa antiga ou Mercosul. O checklist começa como pendente até a primeira operação.</p>
+      <p className="muted">Placa antiga ou Mercosul. Informe as datas da documentação para o checklist sair de pendente.</p>
       <form className="stack" style={{ marginTop: 16 }} onSubmit={submit}>
         {error && <div className="banner banner-danger">{error}</div>}
         <div className={`field ${error ? 'error' : ''}`}>
@@ -119,11 +123,7 @@ export default function TruckForm() {
         </div>
         <div className="field">
           <label>Modelo</label>
-          <input list="fipe-models" value={form.model} onChange={(e) => set('model', e.target.value)} required />
-          <datalist id="fipe-models">
-            {models.map((name) => <option key={name} value={name} />)}
-          </datalist>
-          <span className="hint">Sugestões da tabela FIPE (BrasilAPI), se a rede permitir.</span>
+          <input value={form.model} onChange={(e) => set('model', e.target.value)} placeholder="Volvo FH 540" required />
         </div>
         <div className="field">
           <label>Tipo de combustível</label>
@@ -146,6 +146,10 @@ export default function TruckForm() {
           <input value={form.sector} onChange={(e) => set('sector', e.target.value)} required />
         </div>
         <div className="field">
+          <label>Frequência de lavagem (dias)</label>
+          <input type="number" min="1" max="30" value={form.wash_frequency_days} onChange={(e) => set('wash_frequency_days', e.target.value)} required />
+        </div>
+        <div className="field">
           <label>Motorista responsável</label>
           <select value={form.driver_id} onChange={(e) => set('driver_id', e.target.value)}>
             <option value="">Sem motorista</option>
@@ -155,6 +159,19 @@ export default function TruckForm() {
           </select>
           <span className="hint">Cadastre o motorista em Mais → Usuários, com o perfil Motorista.</span>
         </div>
+        <div className="field">
+          <label>Vencimento do CRLV</label>
+          <input type="date" value={form.crlv_expires_at} onChange={(e) => set('crlv_expires_at', e.target.value)} />
+        </div>
+        <div className="field">
+          <label>Vencimento do seguro</label>
+          <input type="date" value={form.insurance_expires_at} onChange={(e) => set('insurance_expires_at', e.target.value)} />
+        </div>
+        <div className="field">
+          <label>Vencimento do licenciamento</label>
+          <input type="date" value={form.license_expires_at} onChange={(e) => set('license_expires_at', e.target.value)} />
+        </div>
+        <span className="hint">Sem data ou com data vencida, o checklist marca a documentação como pendente.</span>
         <button className="btn btn-primary" disabled={loading}>{loading ? 'Salvando...' : id ? 'Salvar alterações' : 'Cadastrar caminhão'}</button>
       </form>
     </div>

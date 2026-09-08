@@ -6,7 +6,7 @@ class Plate
 {
     public static function normalize(string $plate): string
     {
-        $clean = strtoupper(preg_replace('/[^A-Z0-9]/', '', $plate) ?? '');
+        $clean = preg_replace('/[^A-Z0-9]/', '', strtoupper($plate)) ?? '';
 
         if (preg_match('/^[A-Z]{3}\d{4}$/', $clean)) {
             return substr($clean, 0, 3).'-'.substr($clean, 3);

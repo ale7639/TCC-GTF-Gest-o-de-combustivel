@@ -14,16 +14,21 @@ export default function Reports() {
   const [trucks, setTrucks] = useState([])
   const [truckId, setTruckId] = useState('')
   const [report, setReport] = useState(null)
+  const [error, setError] = useState('')
 
   useEffect(() => {
-    api.get('/trucks').then(({ data }) => setTrucks(data.data))
-  }, [])
+    if (!canReport) return
+    api.get('/trucks').then(({ data }) => setTrucks(data.data)).catch(() => {})
+  }, [canReport])
 
   useEffect(() => {
+    if (!canReport) return
     const params = { month, year }
     if (truckId) params.truck_id = truckId
-    api.get('/reports/consumption', { params }).then(({ data }) => setReport(data))
-  }, [month, year, truckId])
+    api.get('/reports/consumption', { params })
+      .then(({ data }) => { setReport(data); setError('') })
+      .catch(() => setError('Não foi possível gerar o relatório.'))
+  }, [month, year, truckId, canReport])
 
   if (!canReport) return <Navigate to="/app" replace />
   if (!report) return <div className="scroll"><p className="muted">Gerando relatório...</p></div>
@@ -49,6 +54,7 @@ export default function Reports() {
       <p className="eyebrow">Gestão</p>
       <h1>Relatórios</h1>
       <div className="stack" style={{ marginTop: 16 }}>
+        {error && <div className="banner banner-danger">{error}</div>}
         <div className="row">
           <div className="field grow">
             <label>Mês</label>

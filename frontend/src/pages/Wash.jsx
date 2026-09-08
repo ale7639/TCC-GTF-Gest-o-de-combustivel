@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import api from '../api/client'
-import { apiMessage } from '../utils/format'
+import { apiMessage, dateBr } from '../utils/format'
 
 export default function Wash() {
   const { id } = useParams()
@@ -37,9 +37,24 @@ export default function Wash() {
       <div className="card" style={{ marginTop: 12 }}>
         <p><strong>Última lavagem</strong><br />{data.last ? new Date(data.last.washed_at).toLocaleString('pt-BR') : 'Nunca'}</p>
         <p className="muted">{data.days_since != null ? `Há ${data.days_since} dia(s)` : 'Sem registro'}</p>
-        <p>Próxima: {data.next_due || '—'}</p>
+        <p>Próxima: {dateBr(data.next_due)}</p>
       </div>
       <button className="btn btn-primary" style={{ marginTop: 16 }} onClick={mark}>Marcar como lavado</button>
+      {data.history?.length > 0 && (
+        <>
+          <h2 style={{ marginTop: 24 }}>Histórico</h2>
+          <div className="list" style={{ marginTop: 10 }}>
+            {data.history.map((item) => (
+              <div className="list-item" key={item.id}>
+                <div className="grow">
+                  <strong>{new Date(item.washed_at).toLocaleString('pt-BR')}</strong>
+                  <div className="muted">{item.user?.name}</div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </>
+      )}
     </div>
   )
 }

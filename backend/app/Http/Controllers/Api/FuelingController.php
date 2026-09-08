@@ -49,8 +49,9 @@ class FuelingController extends Controller
             $truck,
             $request->user(),
             (float) $request->input('quantity'),
-            $request->filled('current_km') ? $request->integer('current_km') : null,
-            (string) $request->ip()
+            $request->has('current_km') ? $request->integer('current_km') : null,
+            (string) $request->ip(),
+            $request->has('current_liters') ? (float) $request->input('current_liters') : null,
         );
 
         $percentBefore = $fueling->truck->tank_capacity > 0

@@ -76,4 +76,48 @@ class FuelingTest extends TestCase
         $this->assertEquals(8200, (float) FuelTank::query()->first()->current_liters);
         $this->assertEquals(550, (float) $truck->fresh()->current_liters);
     }
+
+    public function test_allows_same_day_refuel_after_reporting_consumed_level(): void
+    {
+        $user = User::factory()->create(['role' => User::ROLE_MOTORISTA]);
+        FuelTank::query()->create([
+            'name' => 'Tanque Principal',
+            'capacity_liters' => 20000,
+            'current_liters' => 8000,
+        ]);
+        $truck = Truck::query()->create([
+            'plate' => 'ABC-1234',
+            'name' => 'FH 01',
+            'model' => 'Volvo FH',
+            'fuel_type' => 'Diesel S10',
+            'tank_capacity' => 1200,
+            'current_liters' => 1200,
+            'current_km' => 1000,
+            'sector' => 'Logística',
+            'status' => 'ativo',
+        ]);
+
+        Sanctum::actingAs($user);
+
+        $blocked = $this->postJson('/api/fuelings', [
+            'truck_id' => $truck->id,
+            'quantity' => 100,
+        ]);
+        $blocked->assertStatus(422);
+
+        $response = $this->postJson('/api/fuelings', [
+            'truck_id' => $truck->id,
+            'quantity' => 400,
+            'current_liters' => 200,
+            'current_km' => 1450,
+        ]);
+
+        $response->assertCreated()
+            ->assertJsonPath('data.quantity', 400)
+            ->assertJsonPath('data.level_before', 200)
+            ->assertJsonPath('data.level_after', 600);
+        $this->assertEquals(600, (float) $truck->fresh()->current_liters);
+        $this->assertEquals(1450, (int) $truck->fresh()->current_km);
+        $this->assertEquals(7600, (float) FuelTank::query()->first()->current_liters);
+    }
 }

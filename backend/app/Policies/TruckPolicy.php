@@ -14,6 +14,10 @@ class TruckPolicy
 
     public function view(User $user, Truck $truck): bool
     {
+        if ($user->isMotorista()) {
+            return (int) $truck->driver_id === (int) $user->id;
+        }
+
         return true;
     }
 

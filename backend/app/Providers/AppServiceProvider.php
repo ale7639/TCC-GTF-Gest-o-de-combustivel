@@ -3,13 +3,16 @@
 namespace App\Providers;
 
 use App\Models\Truck;
+use App\Models\User;
 use App\Policies\TruckPolicy;
 use Illuminate\Auth\Notifications\ResetPassword;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -35,5 +38,22 @@ class AppServiceProvider extends ServiceProvider
         RateLimiter::for('password-reset', function (Request $request) {
             return Limit::perHour(3)->by($request->ip());
         });
+
+        $this->seedDemoDataIfEmpty();
+    }
+
+    private function seedDemoDataIfEmpty(): void
+    {
+        if (! app()->environment('local') || app()->runningUnitTests()) {
+            return;
+        }
+
+        try {
+            if (Schema::hasTable('users') && User::query()->doesntExist()) {
+                Artisan::call('db:seed', ['--force' => true]);
+            }
+        } catch (\Throwable) {
+            // Banco ainda pode estar subindo.
+        }
     }
 }

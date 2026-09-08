@@ -6,6 +6,11 @@ export function km(value) {
   return Number(value || 0).toLocaleString('pt-BR') + ' km'
 }
 
+export function kmPerLiter(value) {
+  if (value == null || value === '') return '—'
+  return Number(value).toLocaleString('pt-BR', { maximumFractionDigits: 2 }) + ' km/L'
+}
+
 export function roleLabel(role) {
   return {
     administrador: 'Administrador',

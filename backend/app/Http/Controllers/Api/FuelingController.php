@@ -9,6 +9,7 @@ use App\Models\Truck;
 use App\Services\FuelingService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
 
 class FuelingController extends Controller
 {
@@ -16,11 +17,34 @@ class FuelingController extends Controller
     {
     }
 
+    public function index(Truck $truck): JsonResponse
+    {
+        Gate::authorize('view', $truck);
+
+        $items = $truck->fuelings()
+            ->with('user')
+            ->orderByDesc('created_at')
+            ->limit(20)
+            ->get()
+            ->map(fn ($fueling) => [
+                'id' => $fueling->id,
+                'quantity' => (float) $fueling->quantity_liters,
+                'level_before' => (float) $fueling->truck_before,
+                'level_after' => (float) $fueling->truck_after,
+                'km' => $fueling->km_at_fueling,
+                'responsible' => $fueling->user?->name,
+                'created_at' => $fueling->created_at->timezone(config('app.timezone'))->format('d/m/Y - H:i'),
+            ]);
+
+        return response()->json(['data' => $items]);
+    }
+
     public function limits(Request $request): JsonResponse
     {
         $request->validate(['truck_id' => ['required', 'exists:trucks,id']]);
 
         $truck = Truck::query()->findOrFail($request->integer('truck_id'));
+        Gate::authorize('view', $truck);
         $tank = FuelTank::query()->firstOrFail();
         $remaining = $truck->remainingCapacity();
         $max = min((float) $tank->current_liters, $remaining);
@@ -44,6 +68,7 @@ class FuelingController extends Controller
     public function store(StoreFuelingRequest $request): JsonResponse
     {
         $truck = Truck::query()->findOrFail($request->integer('truck_id'));
+        Gate::authorize('view', $truck);
 
         $fueling = $this->fuelings->register(
             $truck,

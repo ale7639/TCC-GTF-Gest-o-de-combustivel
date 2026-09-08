@@ -3,7 +3,7 @@ import { Navigate } from 'react-router-dom'
 import { Bar, BarChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
 import api from '../api/client'
 import EmptyState from '../components/EmptyState'
-import { liters } from '../utils/format'
+import { kmPerLiter, liters } from '../utils/format'
 import { useAuth } from '../context/AuthContext'
 
 export default function Reports() {
@@ -86,6 +86,7 @@ export default function Reports() {
             <div className="kpi">
               <div className="kpi-card"><div className="num">{liters(report.total_liters)}</div><span>Total do período</span></div>
               <div className="kpi-card"><div className="num">{liters(report.daily_average)}</div><span>Média diária</span></div>
+              <div className="kpi-card"><div className="num">{kmPerLiter(report.km_per_liter)}</div><span>Média km/L</span></div>
             </div>
             <div className="card" style={{ height: 220 }}>
               <ResponsiveContainer width="100%" height="100%">
@@ -104,7 +105,7 @@ export default function Reports() {
                   <div className="truck-thumb">{index + 1}</div>
                   <div className="grow">
                     <strong>{item.plate}</strong>
-                    <div className="muted">{item.model}</div>
+                    <div className="muted">{item.model}{item.km_per_liter ? ` · ${kmPerLiter(item.km_per_liter)}` : ''}</div>
                   </div>
                   <span className="num">{liters(item.liters)}</span>
                 </div>

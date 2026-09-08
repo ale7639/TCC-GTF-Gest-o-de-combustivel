@@ -17,6 +17,7 @@ export default function Login() {
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+  const [showPassword, setShowPassword] = useState(false)
 
   async function submit(event) {
     event.preventDefault()
@@ -69,7 +70,10 @@ export default function Login() {
           </div>
           <div className={`field ${error ? 'error' : ''}`}>
             <label htmlFor="password">Senha</label>
-            <input id="password" type="password" autoComplete="current-password" value={password} onChange={(e) => setPassword(e.target.value)} required />
+            <input id="password" type={showPassword ? 'text' : 'password'} autoComplete="current-password" value={password} onChange={(e) => setPassword(e.target.value)} required />
+            <button type="button" className="btn btn-ghost" onClick={() => setShowPassword((current) => !current)}>
+              {showPassword ? 'Ocultar senha' : 'Mostrar senha'}
+            </button>
           </div>
           <button className="btn btn-primary" disabled={loading}>{loading ? 'Entrando...' : 'Entrar'}</button>
           <Link className="link" to="/recuperar-senha">Esqueci minha senha</Link>

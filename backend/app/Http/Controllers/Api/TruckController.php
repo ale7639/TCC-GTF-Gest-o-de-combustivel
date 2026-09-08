@@ -26,6 +26,10 @@ class TruckController extends Controller
             ->with(['driver', 'verifier'])
             ->orderBy('plate');
 
+        if ($request->user()?->isMotorista()) {
+            $query->where('driver_id', $request->user()->id);
+        }
+
         if ($search = trim((string) $request->query('q', ''))) {
             $normalized = Plate::normalize($search);
             $query->where(function ($builder) use ($search, $normalized) {
@@ -117,6 +121,7 @@ class TruckController extends Controller
 
     public function show(Truck $truck): JsonResponse
     {
+        Gate::authorize('view', $truck);
         $truck->load(['driver', 'verifier']);
 
         return response()->json(['data' => $this->payload($truck, true, true)]);
@@ -187,6 +192,7 @@ class TruckController extends Controller
 
     public function checklist(Request $request, Truck $truck): JsonResponse
     {
+        Gate::authorize('view', $truck);
         $truck->load('verifier');
         $check = $this->checklist->forTruck($truck);
 
@@ -207,6 +213,7 @@ class TruckController extends Controller
 
     public function status(Truck $truck): JsonResponse
     {
+        Gate::authorize('view', $truck);
         $truck->load('verifier');
         $check = $this->checklist->forTruck($truck);
         $pending = collect($check['items'])->filter(fn ($item) => $item['status'] !== 'ok')->values();

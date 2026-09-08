@@ -4,13 +4,13 @@ services:
     container_name: gfc-mysql
     restart: unless-stopped
     ports:
-      - "3306:3306"
+      - "127.0.0.1:3306:3306"
     environment:
       MYSQL_DATABASE: gfc
       MYSQL_ROOT_PASSWORD: secret
       MYSQL_USER: gfc
       MYSQL_PASSWORD: secret
-    command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+    command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci --default-authentication-plugin=mysql_native_password
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-psecret"]
       interval: 5s
@@ -41,6 +41,22 @@ services:
     volumes:
       - ./backend:/var/www/html
       - gfc_vendor:/var/www/html/vendor
+    depends_on:
+      mysql:
+        condition: service_healthy
+
+  phpmyadmin:
+    image: phpmyadmin:5
+    container_name: gfc-phpmyadmin
+    restart: unless-stopped
+    ports:
+      - "8081:80"
+    environment:
+      PMA_HOST: mysql
+      PMA_PORT: 3306
+      PMA_USER: root
+      PMA_PASSWORD: secret
+      UPLOAD_LIMIT: 64M
     depends_on:
       mysql:
         condition: service_healthy

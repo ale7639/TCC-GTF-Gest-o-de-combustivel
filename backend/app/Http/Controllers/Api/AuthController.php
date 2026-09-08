@@ -154,6 +154,38 @@ class AuthController extends Controller
         return response()->json(['user' => $this->userPayload($request->user())]);
     }
 
+    public function changePassword(Request $request): JsonResponse
+    {
+        $request->validate([
+            'current_password' => ['required', 'string'],
+            'password' => ['required', 'string', 'confirmed', 'regex:'.PasswordRules::regex()],
+        ], [
+            'password.confirmed' => 'As senhas não coincidem.',
+            'password.regex' => PasswordRules::message(),
+        ]);
+
+        $user = $request->user();
+
+        if (! Hash::check($request->input('current_password'), $user->password)) {
+            throw ValidationException::withMessages([
+                'current_password' => 'A senha atual não confere.',
+            ]);
+        }
+
+        if (Hash::check($request->input('password'), $user->password)) {
+            throw ValidationException::withMessages([
+                'password' => 'A nova senha não pode ser igual à senha anterior.',
+            ]);
+        }
+
+        $user->forceFill(['password' => $request->input('password')])->save();
+        $user->tokens()->where('id', '!=', $user->currentAccessToken()?->id)->delete();
+
+        AuditLog::record($user, 'auth.senha', User::class, $user->id, [], $request->ip());
+
+        return response()->json(['message' => 'Senha atualizada com sucesso.']);
+    }
+
     public function logout(Request $request): JsonResponse
     {
         $request->user()->currentAccessToken()?->delete();

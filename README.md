@@ -256,18 +256,21 @@ docker compose up -d --build
 
 - App (telas de login e dashboard): http://localhost:5173
 - API: http://localhost:8000 — página de status. O sistema em si não abre nesta porta.
+- Banco (phpMyAdmin): http://localhost:8081
 
-O MySQL do Docker usa:
+O MySQL do Docker **não tem tela própria**. O phpMyAdmin é o jeito mais simples de administrar as tabelas.
 
-```
-DB_HOST=127.0.0.1
-DB_PORT=3306
-DB_DATABASE=gfc
-DB_USERNAME=root
-DB_PASSWORD=secret
-```
+| Campo | Valor |
+|---|---|
+| Host (HeidiSQL / DBeaver / Workbench) | `127.0.0.1` — não use `mysql` nem `localhost` se falhar |
+| Porta | `3306` |
+| Banco | `gfc` |
+| Usuário | `root` |
+| Senha | `secret` |
 
-O host `mysql` só funciona dentro do Docker. No HeidiSQL/DBeaver use `127.0.0.1` e a senha `secret`.
+No phpMyAdmin isso já vem preenchido. No Workbench, se pedir SSL, use a opção de conexão sem SSL.
+
+Se a porta 3306 já estiver ocupada pelo XAMPP, feche o MySQL do XAMPP ou o Docker não consegue expor o banco.
 
 ### Alternativa: MySQL no Docker e Laravel no computador
 

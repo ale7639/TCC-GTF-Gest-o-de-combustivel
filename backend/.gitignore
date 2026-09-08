@@ -1,5 +1,4 @@
-/vendor/
-.env
+# Projeto acadêmico: vendor e .env versionados para o parceiro rodar fácil
 .env.backup
 .phpunit.result.cache
 Homestead.json
@@ -13,4 +12,3 @@ yarn-error.log
 /storage/*.key
 /storage/pail
 .phpactor.json
-auth.json

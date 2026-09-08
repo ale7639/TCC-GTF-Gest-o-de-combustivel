@@ -11,12 +11,14 @@ export default function TruckDetails() {
   const { isAdmin } = useAuth()
   const navigate = useNavigate()
   const [truck, setTruck] = useState(null)
+  const [fuelings, setFuelings] = useState([])
   const [confirm, setConfirm] = useState(false)
   const [error, setError] = useState('')
 
   useEffect(() => {
     api.get(`/trucks/${id}`).then(({ data }) => setTruck(data.data))
       .catch((err) => setError(apiMessage(err, 'Não foi possível carregar o caminhão.')))
+    api.get(`/trucks/${id}/fuelings`).then(({ data }) => setFuelings(data.data || [])).catch(() => {})
   }, [id])
 
   async function remove() {
@@ -61,6 +63,18 @@ export default function TruckDetails() {
         <Link className="btn btn-soft" to={`/app/frota/${id}/checklist`}>Abrir checklist</Link>
         <Link className="btn btn-soft" to={`/app/frota/${id}/status`}>Ver status da escala</Link>
         {isAdmin && <button className="btn btn-danger" onClick={() => setConfirm(true)}>Excluir caminhão</button>}
+      </div>
+      <h2 style={{ marginTop: 24 }}>Últimos abastecimentos</h2>
+      <div className="list" style={{ marginTop: 10 }}>
+        {fuelings.length === 0 && <p className="muted">Nenhum abastecimento registrado ainda.</p>}
+        {fuelings.map((item) => (
+          <div className="list-item" key={item.id}>
+            <div className="grow">
+              <strong>{liters(item.quantity)}</strong>
+              <div className="muted">{item.created_at} · {item.responsible}{item.km ? ` · ${km(item.km)}` : ''}</div>
+            </div>
+          </div>
+        ))}
       </div>
       {confirm && (
         <Modal title="Excluir caminhão?" onClose={() => setConfirm(false)}>

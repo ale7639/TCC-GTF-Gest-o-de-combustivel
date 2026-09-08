@@ -19,7 +19,13 @@ class DashboardController extends Controller
     public function show(Request $request): JsonResponse
     {
         $tank = FuelTank::query()->firstOrFail();
-        $trucks = Truck::query()->where('status', 'ativo')->with(['driver', 'verifier'])->get();
+        $trucks = Truck::query()->where('status', 'ativo')->with(['driver', 'verifier']);
+
+        if ($request->user()->isMotorista()) {
+            $trucks->where('driver_id', $request->user()->id);
+        }
+
+        $trucks = $trucks->get();
 
         $ready = 0;
         $pending = 0;
@@ -42,6 +48,20 @@ class DashboardController extends Controller
         });
 
         $todayFuelings = Fueling::query()->whereDate('created_at', today())->get();
+        $docsLimit = now()->addDays(10);
+        $docsSoon = $trucks->filter(function (Truck $truck) use ($docsLimit) {
+            foreach (['crlv_expires_at', 'insurance_expires_at', 'license_expires_at'] as $field) {
+                $date = $truck->{$field};
+                if (! $date || $date->lte($docsLimit)) {
+                    return true;
+                }
+            }
+
+            return false;
+        })->map(fn (Truck $truck) => [
+            'id' => $truck->id,
+            'plate' => $truck->plate,
+        ])->values();
 
         return response()->json([
             'user' => [
@@ -66,6 +86,7 @@ class DashboardController extends Controller
                 'fuelings' => $todayFuelings->count(),
                 'liters' => (float) $todayFuelings->sum('quantity_liters'),
             ],
+            'docs_soon' => $docsSoon,
         ]);
     }
 }

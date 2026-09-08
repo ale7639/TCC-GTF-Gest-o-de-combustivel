@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\AlertController;
+use App\Http\Controllers\Api\AuditLogController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\DashboardController;
 use App\Http\Controllers\Api\FuelingController;
@@ -23,6 +24,7 @@ Route::post('/reset-password', [AuthController::class, 'resetPassword']);
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::get('/me', [AuthController::class, 'me']);
+    Route::put('/password', [AuthController::class, 'changePassword']);
     Route::get('/dashboard', [DashboardController::class, 'show']);
 
     Route::get('/trucks/check-plate', [TruckController::class, 'checkPlate']);
@@ -38,6 +40,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::get('/fuelings/limits', [FuelingController::class, 'limits']);
     Route::post('/fuelings', [FuelingController::class, 'store']);
+    Route::get('/trucks/{truck}/fuelings', [FuelingController::class, 'index']);
     Route::post('/tank/refill', [FuelTankController::class, 'refill'])->middleware('role:administrador');
 
     Route::get('/trucks/{truck}/maintenances', [MaintenanceController::class, 'index']);
@@ -64,5 +67,6 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/users', [UserController::class, 'index']);
         Route::post('/users', [UserController::class, 'store']);
         Route::put('/users/{user}', [UserController::class, 'updateRole']);
+        Route::get('/audit-logs', [AuditLogController::class, 'index']);
     });
 });

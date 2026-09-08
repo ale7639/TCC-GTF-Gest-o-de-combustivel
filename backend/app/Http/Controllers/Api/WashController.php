@@ -8,11 +8,13 @@ use App\Models\Truck;
 use App\Models\Wash;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
 
 class WashController extends Controller
 {
     public function show(Truck $truck): JsonResponse
     {
+        Gate::authorize('view', $truck);
         $last = $truck->washes()->with('user')->orderByDesc('washed_at')->first();
         $check = $truck->checklist()['items']['lavagem'];
 
@@ -35,6 +37,7 @@ class WashController extends Controller
 
     public function store(Request $request, Truck $truck): JsonResponse
     {
+        Gate::authorize('view', $truck);
         $wash = Wash::query()->create([
             'truck_id' => $truck->id,
             'user_id' => $request->user()->id,

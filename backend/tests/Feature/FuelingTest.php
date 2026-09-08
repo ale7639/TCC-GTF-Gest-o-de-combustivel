@@ -30,6 +30,7 @@ class FuelingTest extends TestCase
             'current_liters' => 100,
             'current_km' => 1000,
             'sector' => 'Logística',
+            'driver_id' => $user->id,
             'status' => 'ativo',
         ]);
 
@@ -94,6 +95,7 @@ class FuelingTest extends TestCase
             'current_liters' => 1200,
             'current_km' => 1000,
             'sector' => 'Logística',
+            'driver_id' => $user->id,
             'status' => 'ativo',
         ]);
 
@@ -119,5 +121,38 @@ class FuelingTest extends TestCase
         $this->assertEquals(600, (float) $truck->fresh()->current_liters);
         $this->assertEquals(1450, (int) $truck->fresh()->current_km);
         $this->assertEquals(7600, (float) FuelTank::query()->first()->current_liters);
+    }
+
+    public function test_lists_fueling_history_for_the_truck(): void
+    {
+        $user = User::factory()->create(['role' => User::ROLE_SUPERVISOR]);
+        FuelTank::query()->create([
+            'name' => 'Tanque Principal',
+            'capacity_liters' => 20000,
+            'current_liters' => 8000,
+        ]);
+        $truck = Truck::query()->create([
+            'plate' => 'ABC-1234',
+            'name' => 'FH 01',
+            'model' => 'Volvo FH',
+            'fuel_type' => 'Diesel S10',
+            'tank_capacity' => 1200,
+            'current_liters' => 200,
+            'current_km' => 1000,
+            'sector' => 'Logística',
+            'status' => 'ativo',
+        ]);
+
+        Sanctum::actingAs($user);
+
+        $this->postJson('/api/fuelings', [
+            'truck_id' => $truck->id,
+            'quantity' => 100,
+        ])->assertCreated();
+
+        $this->getJson('/api/trucks/'.$truck->id.'/fuelings')
+            ->assertOk()
+            ->assertJsonCount(1, 'data')
+            ->assertJsonPath('data.0.quantity', 100);
     }
 }

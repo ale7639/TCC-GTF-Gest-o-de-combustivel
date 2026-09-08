@@ -19,6 +19,8 @@ import Reports from './pages/Reports'
 import Alerts from './pages/Alerts'
 import More from './pages/More'
 import Users from './pages/Users'
+import ChangePassword from './pages/ChangePassword'
+import AuditLogs from './pages/AuditLogs'
 
 function Private({ children }) {
   const { token } = useAuth()
@@ -56,6 +58,8 @@ export default function App() {
           <Route path="alertas" element={<Alerts />} />
           <Route path="mais" element={<More />} />
           <Route path="usuarios" element={<Users />} />
+          <Route path="senha" element={<ChangePassword />} />
+          <Route path="auditoria" element={<AuditLogs />} />
         </Route>
         <Route path="*" element={<Navigate to="/app" replace />} />
       </Routes>

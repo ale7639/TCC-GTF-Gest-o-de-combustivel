@@ -127,6 +127,11 @@ export default function Fueling() {
         {projection !== null && (
           <div className="banner banner-ok">Projeção no caminhão: {liters(projection)}</div>
         )}
+        {max >= 1 && (
+          <button type="button" className="btn btn-soft" onClick={() => setQuantity(String(Math.floor(max)))}>
+            Completar tanque ({liters(max)})
+          </button>
+        )}
         <button className="btn btn-fuel" disabled={loading || Boolean(invalid) || !qty}>
           {loading ? 'Registrando...' : 'Confirmar abastecimento'}
         </button>

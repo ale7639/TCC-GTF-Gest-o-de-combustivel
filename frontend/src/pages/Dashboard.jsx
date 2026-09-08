@@ -95,6 +95,12 @@ export default function Dashboard() {
               </div>
             </div>
             <Link to="/app/abastecer" className="btn btn-fuel">+ Abastecer caminhão</Link>
+            {data.docs_soon?.length > 0 && (
+              <Link className="card" to="/app/alertas" style={{ textDecoration: 'none', color: 'inherit' }}>
+                <strong>Documentação próxima do vencimento</strong>
+                <p className="muted" style={{ marginTop: 6 }}>{data.docs_soon.length} caminhão(ões) com CRLV, seguro ou licenciamento em até 10 dias ou sem data.</p>
+              </Link>
+            )}
           </>
         )}
       </div>

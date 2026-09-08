@@ -65,7 +65,9 @@ export default function Fleet() {
         {error && <div className="banner banner-danger">{error}</div>}
         <EmptyState
           title="Sua frota ainda está vazia"
-          text="Cadastre o primeiro caminhão para começar a controlar combustível, manutenção e lavagem."
+          text={isAdmin
+            ? 'Cadastre o primeiro caminhão para começar a controlar combustível, manutenção e lavagem.'
+            : 'Nenhum caminhão está vinculado ao seu usuário. Peça ao administrador para atribuir um veículo.'}
         >
           {isAdmin && <Link className="btn btn-primary" to="/app/frota/novo">Cadastrar primeiro caminhão</Link>}
           {importControls}

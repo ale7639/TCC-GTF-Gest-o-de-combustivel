@@ -4,6 +4,8 @@ namespace Tests\Feature;
 
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Hash;
+use Laravel\Sanctum\Sanctum;
 use Tests\TestCase;
 
 class AuthTest extends TestCase
@@ -75,5 +77,19 @@ class AuthTest extends TestCase
         ]);
 
         $response->assertStatus(423);
+    }
+
+    public function test_authenticated_user_can_change_password(): void
+    {
+        $user = User::factory()->create(['password' => 'Senha123']);
+        Sanctum::actingAs($user);
+
+        $this->putJson('/api/password', [
+            'current_password' => 'Senha123',
+            'password' => 'NovaSenha1',
+            'password_confirmation' => 'NovaSenha1',
+        ])->assertOk();
+
+        $this->assertTrue(Hash::check('NovaSenha1', $user->fresh()->password));
     }
 }

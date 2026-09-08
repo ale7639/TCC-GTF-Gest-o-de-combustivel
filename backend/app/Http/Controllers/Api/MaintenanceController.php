@@ -9,11 +9,13 @@ use App\Models\Maintenance;
 use App\Models\Truck;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
 
 class MaintenanceController extends Controller
 {
     public function index(Truck $truck): JsonResponse
     {
+        Gate::authorize('view', $truck);
         $items = $truck->maintenances()->with('user')->orderByDesc('service_date')->get();
         $kmLeft = $truck->next_maintenance_km
             ? max(0, $truck->next_maintenance_km - $truck->current_km)
@@ -35,6 +37,7 @@ class MaintenanceController extends Controller
 
     public function store(StoreMaintenanceRequest $request, Truck $truck): JsonResponse
     {
+        Gate::authorize('view', $truck);
         $maintenance = Maintenance::query()->create([
             'truck_id' => $truck->id,
             'user_id' => $request->user()->id,

@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import api from '../api/client'
-import { apiMessage, km } from '../utils/format'
+import { apiMessage, dateBr, km } from '../utils/format'
 import { useAuth } from '../context/AuthContext'
 
 export default function Maintenance() {
@@ -45,7 +45,7 @@ export default function Maintenance() {
       <h1>Manutenção preventiva</h1>
       <p className="muted">{data.truck.plate} · {data.truck.model}</p>
       <div className="card" style={{ marginTop: 12 }}>
-        <p><strong>Próxima revisão</strong><br />{data.truck.next_maintenance_date || 'Não programada'}</p>
+        <p><strong>Próxima revisão</strong><br />{dateBr(data.truck.next_maintenance_date)}</p>
         {data.truck.km_left !== null && <p className="muted">Faltam {km(data.truck.km_left)}</p>}
       </div>
       {canManage && (
@@ -71,16 +71,18 @@ export default function Maintenance() {
             <label>Próximo KM</label>
             <input type="number" value={form.next_km} onChange={(e) => setForm({ ...form, next_km: e.target.value })} />
           </div>
+          <span className="hint">Preencha a próxima data e o próximo KM para o checklist sair de pendente.</span>
           <button className="btn btn-primary">Registrar manutenção</button>
         </form>
       )}
       <h2 style={{ marginTop: 24 }}>Histórico</h2>
       <div className="list" style={{ marginTop: 10 }}>
+        {data.data.length === 0 && <p className="muted">Nenhuma manutenção registrada ainda.</p>}
         {data.data.map((item) => (
           <div className="list-item" key={item.id}>
             <div className="grow">
               <strong>{item.description}</strong>
-              <div className="muted">{item.service_date} · {km(item.km)} · {item.user?.name}</div>
+              <div className="muted">{dateBr(item.service_date)} · {km(item.km)} · {item.user?.name}</div>
             </div>
           </div>
         ))}

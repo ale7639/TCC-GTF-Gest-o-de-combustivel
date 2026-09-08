@@ -19,7 +19,6 @@ export default function More() {
       <div className="list" style={{ marginTop: 18 }}>
         <Link className="list-item" to="/app/alertas">Central de alertas</Link>
         {isAdmin && <Link className="list-item" to="/app/usuarios">Usuários e perfis</Link>}
-        <a className="list-item" href="https://brasilapi.com.br/" target="_blank" rel="noreferrer">BrasilAPI · FIPE</a>
       </div>
       <button className="btn btn-soft" style={{ marginTop: 18 }} onClick={leave}>Sair</button>
     </div>

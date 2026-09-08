@@ -2,19 +2,45 @@ import { useEffect, useState } from 'react'
 import { Link, useOutletContext } from 'react-router-dom'
 import api from '../api/client'
 import TankGauge from '../components/TankGauge'
-import { firstName, liters } from '../utils/format'
+import { apiMessage, firstName, liters } from '../utils/format'
 import { useAuth } from '../context/AuthContext'
 
 export default function Dashboard() {
-  const { user } = useAuth()
+  const { user, isAdmin } = useAuth()
   const { unread } = useOutletContext()
   const [data, setData] = useState(null)
+  const [error, setError] = useState('')
+  const [refill, setRefill] = useState('')
+  const [saving, setSaving] = useState(false)
 
-  useEffect(() => {
-    api.get('/dashboard').then(({ data }) => setData(data))
-  }, [])
+  async function load() {
+    try {
+      const { data } = await api.get('/dashboard')
+      setData(data)
+      setError('')
+    } catch (err) {
+      setError(apiMessage(err, 'Não foi possível carregar o painel.'))
+    }
+  }
 
-  if (!data) return <div className="scroll"><p className="muted">Carregando painel...</p></div>
+  useEffect(() => { load() }, [])
+
+  async function refillTank(event) {
+    event.preventDefault()
+    setSaving(true)
+    setError('')
+    try {
+      await api.post('/tank/refill', { quantity: Number(refill) })
+      setRefill('')
+      await load()
+    } catch (err) {
+      setError(apiMessage(err, 'Não foi possível reabastecer o tanque central.'))
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  if (!data && !error) return <div className="scroll"><p className="muted">Carregando painel...</p></div>
 
   return (
     <div className="scroll">
@@ -33,26 +59,44 @@ export default function Dashboard() {
       </div>
 
       <div className="stack">
-        <TankGauge current={data.tank.current} percent={data.tank.percent} critical={data.tank.critical} />
-        <div className="kpi">
-          <div className="kpi-card">
-            <div className="num">{data.fleet.ready}</div>
-            <span>Caminhões prontos</span>
-          </div>
-          <div className="kpi-card">
-            <div className="num">{data.fleet.pending}</div>
-            <span>Pendente atenção</span>
-          </div>
-          <div className="kpi-card">
-            <div className="num">{data.today.fuelings}</div>
-            <span>Abastecimentos hoje</span>
-          </div>
-          <div className="kpi-card">
-            <div className="num">{liters(data.today.liters)}</div>
-            <span>Litros distribuídos</span>
-          </div>
-        </div>
-        <Link to="/app/abastecer" className="btn btn-fuel">+ Abastecer caminhão</Link>
+        {error && <div className="banner banner-danger">{error}</div>}
+        {data && (
+          <>
+            <TankGauge current={data.tank.current} percent={data.tank.percent} critical={data.tank.critical} />
+            {isAdmin && (
+              <form className="card stack" onSubmit={refillTank}>
+                <strong>Reabastecer tanque central</strong>
+                <p className="muted">Capacidade {liters(data.tank.capacity)}. Cabe {liters(Math.max(0, data.tank.capacity - data.tank.current))}.</p>
+                <div className="field">
+                  <label>Litros recebidos</label>
+                  <input type="number" min="1" value={refill} onChange={(e) => setRefill(e.target.value)} required />
+                </div>
+                <button className="btn btn-soft" disabled={saving || !Number(refill)}>
+                  {saving ? 'Salvando...' : 'Adicionar ao tanque'}
+                </button>
+              </form>
+            )}
+            <div className="kpi">
+              <div className="kpi-card">
+                <div className="num">{data.fleet.ready}</div>
+                <span>Caminhões prontos</span>
+              </div>
+              <div className="kpi-card">
+                <div className="num">{data.fleet.pending}</div>
+                <span>Pendente atenção</span>
+              </div>
+              <div className="kpi-card">
+                <div className="num">{data.today.fuelings}</div>
+                <span>Abastecimentos hoje</span>
+              </div>
+              <div className="kpi-card">
+                <div className="num">{liters(data.today.liters)}</div>
+                <span>Litros distribuídos</span>
+              </div>
+            </div>
+            <Link to="/app/abastecer" className="btn btn-fuel">+ Abastecer caminhão</Link>
+          </>
+        )}
       </div>
     </div>
   )

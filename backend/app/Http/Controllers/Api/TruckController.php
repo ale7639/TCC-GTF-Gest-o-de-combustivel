@@ -170,7 +170,10 @@ class TruckController extends Controller
             ], 422);
         }
 
-        $exists = Truck::withTrashed()->where('plate', $plate)->exists();
+        $exists = Truck::withTrashed()
+            ->where('plate', $plate)
+            ->when($request->integer('ignore_id'), fn ($query, $id) => $query->where('id', '!=', $id))
+            ->exists();
 
         return response()->json([
             'valid' => true,

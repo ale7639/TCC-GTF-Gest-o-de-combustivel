@@ -12,9 +12,15 @@ use Illuminate\Validation\ValidationException;
 
 class FuelingService
 {
-    public function register(Truck $truck, User $user, float $quantity, ?int $km, string $ip): Fueling
-    {
-        return DB::transaction(function () use ($truck, $user, $quantity, $km, $ip) {
+    public function register(
+        Truck $truck,
+        User $user,
+        float $quantity,
+        ?int $km,
+        string $ip,
+        ?float $reportedLiters = null,
+    ): Fueling {
+        return DB::transaction(function () use ($truck, $user, $quantity, $km, $ip, $reportedLiters) {
             $tank = FuelTank::query()->lockForUpdate()->firstOrFail();
             $truck = Truck::query()->lockForUpdate()->findOrFail($truck->id);
 
@@ -24,7 +30,17 @@ class FuelingService
                 ]);
             }
 
-            $remaining = $truck->remainingCapacity();
+            $capacity = (float) $truck->tank_capacity;
+            $storedLiters = (float) $truck->current_liters;
+            $truckBefore = $reportedLiters !== null ? $reportedLiters : $storedLiters;
+
+            if ($truckBefore < 0 || $truckBefore > $capacity) {
+                throw ValidationException::withMessages([
+                    'current_liters' => 'O nível atual deve estar entre 0 e a capacidade do tanque ('.number_format($capacity, 0, ',', '.').' L).',
+                ]);
+            }
+
+            $remaining = $capacity - $truckBefore;
             $max = min((float) $tank->current_liters, $remaining);
 
             if ($quantity <= 0) {
@@ -45,7 +61,6 @@ class FuelingService
             }
 
             $tankBefore = (float) $tank->current_liters;
-            $truckBefore = (float) $truck->current_liters;
 
             $tank->current_liters = $tankBefore - $quantity;
             $tank->save();
@@ -76,6 +91,8 @@ class FuelingService
             AuditLog::record($user, 'abastecimento.criar', Fueling::class, $fueling->id, [
                 'placa' => $truck->plate,
                 'litros' => $quantity,
+                'nivel_informado' => $truckBefore,
+                'nivel_sistema' => $storedLiters,
             ], $ip);
 
             return $fueling->load(['truck', 'user']);

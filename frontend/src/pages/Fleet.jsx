@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import api from '../api/client'
 import EmptyState from '../components/EmptyState'
 import StatusBadge from '../components/StatusBadge'
+import { apiMessage } from '../utils/format'
 import { useAuth } from '../context/AuthContext'
 
 export default function Fleet() {
@@ -10,14 +11,21 @@ export default function Fleet() {
   const [trucks, setTrucks] = useState(null)
   const [q, setQ] = useState('')
   const [status, setStatus] = useState('')
+  const [error, setError] = useState('')
   const fileRef = useRef(null)
 
   async function load(nextQ = q, nextStatus = status) {
     const params = new URLSearchParams({ with_checklist: '1' })
     if (nextQ) params.set('q', nextQ)
     if (nextStatus) params.set('status', nextStatus)
-    const { data } = await api.get(`/trucks?${params}`)
-    setTrucks(data.data)
+    try {
+      const { data } = await api.get(`/trucks?${params}`)
+      setTrucks(data.data)
+      setError('')
+    } catch (err) {
+      setError(apiMessage(err, 'Não foi possível carregar a frota.'))
+      setTrucks([])
+    }
   }
 
   useEffect(() => {
@@ -30,12 +38,23 @@ export default function Fleet() {
     if (!file) return
     const body = new FormData()
     body.append('file', file)
-    await api.post('/trucks/import', body)
-    event.target.value = ''
-    await load()
+    try {
+      await api.post('/trucks/import', body)
+      event.target.value = ''
+      await load()
+    } catch (err) {
+      setError(apiMessage(err, 'Não foi possível importar a planilha.'))
+    }
   }
 
   const emptySearch = useMemo(() => trucks && trucks.length === 0 && (q || status), [trucks, q, status])
+
+  const importControls = isAdmin && (
+    <>
+      <input ref={fileRef} type="file" accept=".csv,text/csv" hidden onChange={importSheet} />
+      <button className="btn btn-soft" type="button" onClick={() => fileRef.current?.click()}>Importar CSV</button>
+    </>
+  )
 
   if (trucks === null) return <div className="scroll"><p className="muted">Carregando frota...</p></div>
 
@@ -43,18 +62,14 @@ export default function Fleet() {
     return (
       <div className="scroll">
         <div className="topbar"><h1>Frota</h1></div>
+        {error && <div className="banner banner-danger">{error}</div>}
         <EmptyState
           title="Sua frota ainda está vazia"
           text="Cadastre o primeiro caminhão para começar a controlar combustível, manutenção e lavagem."
         >
           {isAdmin && <Link className="btn btn-primary" to="/app/frota/novo">Cadastrar primeiro caminhão</Link>}
-          {isAdmin && (
-            <>
-              <input ref={fileRef} type="file" accept=".csv,text/csv" hidden onChange={importSheet} />
-              <button className="btn btn-soft" type="button" onClick={() => fileRef.current?.click()}>Importar via planilha</button>
-              <a className="link" href="/modelo-frota.csv">Ver modelo CSV</a>
-            </>
-          )}
+          {importControls}
+          {isAdmin && <a className="link" href="/modelo-frota.csv">Ver modelo CSV</a>}
         </EmptyState>
       </div>
     )
@@ -70,6 +85,7 @@ export default function Fleet() {
         {isAdmin && <Link className="btn btn-primary" style={{ width: 'auto', padding: '10px 14px' }} to="/app/frota/novo">Novo</Link>}
       </div>
       <div className="stack">
+        {error && <div className="banner banner-danger">{error}</div>}
         <div className="search-wrap">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-3-3"/></svg>
           <input className="search" placeholder="Buscar por placa ou modelo" value={q} onChange={(e) => setQ(e.target.value)} />
@@ -79,6 +95,7 @@ export default function Fleet() {
             <button key={value} className={`chip ${status === value ? 'on' : ''}`} onClick={() => setStatus(value)}>{label}</button>
           ))}
         </div>
+        {isAdmin && <div className="row">{importControls}<a className="link" href="/modelo-frota.csv">Modelo CSV</a></div>}
         {emptySearch ? (
           <EmptyState icon="🔎" title="Nenhum veículo encontrado" text="Tente outra placa ou limpe o filtro." />
         ) : (

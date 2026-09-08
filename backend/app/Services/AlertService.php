@@ -93,12 +93,25 @@ class AlertService
             'Licenciamento' => $truck->license_expires_at,
         ];
 
+        $created = 0;
+
         foreach ($docs as $name => $date) {
-            if (! $date || $date->gt($limit)) {
+            if (! $date) {
+                $created += $this->upsert(
+                    Alert::TYPE_DOCS,
+                    $truck->id,
+                    'Documentação pendente',
+                    'Caminhão '.$truck->plate.' — '.$name.' sem data de vencimento',
+                    ['plate' => $truck->plate, 'doc' => $name]
+                );
                 continue;
             }
 
-            $this->upsert(
+            if ($date->gt($limit)) {
+                continue;
+            }
+
+            $created += $this->upsert(
                 Alert::TYPE_DOCS,
                 $truck->id,
                 'Documentação a Vencer',
@@ -107,7 +120,7 @@ class AlertService
             );
         }
 
-        return 0;
+        return $created;
     }
 
     private function upsert(string $type, ?int $truckId, string $title, string $description, array $meta): int

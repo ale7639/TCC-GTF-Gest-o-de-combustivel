@@ -19,8 +19,9 @@ export default function Users() {
   const [saving, setSaving] = useState(false)
 
   useEffect(() => {
-    api.get('/users').then(({ data }) => setUsers(data.data))
-  }, [])
+    if (!isAdmin) return
+    api.get('/users').then(({ data }) => setUsers(data.data)).catch(() => {})
+  }, [isAdmin])
 
   async function changeRole(id, role) {
     const { data } = await api.put(`/users/${id}`, { role })

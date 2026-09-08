@@ -1,9 +1,11 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import api from '../api/client'
+import { useAuth } from '../context/AuthContext'
 
 export default function Checklist() {
   const { id } = useParams()
+  const { isAdmin } = useAuth()
   const navigate = useNavigate()
   const [data, setData] = useState(null)
 
@@ -36,6 +38,9 @@ export default function Checklist() {
       <div className={`banner ${data.checklist.ready ? 'banner-ok' : 'banner-warn'}`} style={{ marginTop: 12 }}>
         {data.checklist.label}
       </div>
+      {isAdmin && data.checklist.items.documentacao?.status !== 'ok' && (
+        <Link className="btn btn-soft" style={{ marginTop: 12 }} to={`/app/frota/${id}/editar`}>Atualizar CRLV, seguro e licenciamento</Link>
+      )}
       <Link className="btn btn-primary" style={{ marginTop: 12 }} to={`/app/frota/${id}/status`}>Ver status final</Link>
     </div>
   )

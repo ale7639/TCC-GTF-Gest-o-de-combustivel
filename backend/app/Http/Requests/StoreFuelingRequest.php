@@ -16,6 +16,7 @@ class StoreFuelingRequest extends FormRequest
         return [
             'truck_id' => ['required', 'exists:trucks,id'],
             'quantity' => ['required', 'numeric', 'min:1'],
+            'current_liters' => ['nullable', 'numeric', 'min:0'],
             'current_km' => ['nullable', 'integer', 'min:0'],
         ];
     }

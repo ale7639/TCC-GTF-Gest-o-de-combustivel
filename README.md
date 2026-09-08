@@ -237,7 +237,6 @@ O código segue o documento de TCC (sprints, regras de negócio e casos de teste
 - Backend: PHP 8.2+ · Laravel 11 · API REST · Laravel Sanctum
 - Frontend: React 18 · Vite · PWA (instalável no celular)
 - Banco: MySQL 8
-- API gratuita: [BrasilAPI / FIPE](https://brasilapi.com.br/) para sugerir modelos de caminhão no cadastro
 
 ## Perfis (RN)
 
@@ -258,9 +257,17 @@ docker compose up -d --build
 - App (telas de login e dashboard): http://localhost:5173
 - API: http://localhost:8000 — página de status. O sistema em si não abre nesta porta.
 
-```bash
-docker compose logs -f app
+O MySQL do Docker usa:
+
 ```
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_DATABASE=gfc
+DB_USERNAME=root
+DB_PASSWORD=secret
+```
+
+O host `mysql` só funciona dentro do Docker. No HeidiSQL/DBeaver use `127.0.0.1` e a senha `secret`.
 
 ### Alternativa: MySQL no Docker e Laravel no computador
 

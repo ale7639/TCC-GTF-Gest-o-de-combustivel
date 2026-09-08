@@ -16,7 +16,9 @@ api.interceptors.request.use((config) => {
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response?.status === 401 && !error.config?.url?.includes('/login')) {
+    const url = error.config?.url || ''
+    const isAuthRoute = ['/login', '/register', '/forgot-password', '/reset-password'].some((path) => url.includes(path))
+    if (error.response?.status === 401 && !isAuthRoute) {
       localStorage.removeItem('gfc_token')
       localStorage.removeItem('gfc_user')
       if (!window.location.pathname.startsWith('/login')) {

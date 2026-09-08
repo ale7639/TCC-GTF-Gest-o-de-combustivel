@@ -3,7 +3,7 @@ import { Link, useNavigate, useParams } from 'react-router-dom'
 import api from '../api/client'
 import Modal from '../components/Modal'
 import StatusBadge from '../components/StatusBadge'
-import { km, liters } from '../utils/format'
+import { km, liters, dateBr, apiMessage } from '../utils/format'
 import { useAuth } from '../context/AuthContext'
 
 export default function TruckDetails() {
@@ -12,9 +12,11 @@ export default function TruckDetails() {
   const navigate = useNavigate()
   const [truck, setTruck] = useState(null)
   const [confirm, setConfirm] = useState(false)
+  const [error, setError] = useState('')
 
   useEffect(() => {
     api.get(`/trucks/${id}`).then(({ data }) => setTruck(data.data))
+      .catch((err) => setError(apiMessage(err, 'Não foi possível carregar o caminhão.')))
   }, [id])
 
   async function remove() {
@@ -22,7 +24,7 @@ export default function TruckDetails() {
     navigate('/app/frota')
   }
 
-  if (!truck) return <div className="scroll"><p className="muted">Carregando...</p></div>
+  if (!truck) return <div className="scroll"><p className="muted">{error || 'Carregando...'}</p></div>
 
   return (
     <div className="scroll">
@@ -45,6 +47,9 @@ export default function TruckDetails() {
           <p><strong>Combustível</strong><br />{truck.fuel_type} · {liters(truck.current_liters)} de {liters(truck.tank_capacity)}</p>
           <p><strong>Quilometragem</strong><br />{km(truck.current_km)}</p>
           <p><strong>Motorista</strong><br />{truck.driver?.name || 'Não atribuído'}</p>
+          <p><strong>Documentação</strong><br />
+            CRLV {dateBr(truck.crlv_expires_at)} · Seguro {dateBr(truck.insurance_expires_at)} · Licenciamento {dateBr(truck.license_expires_at)}
+          </p>
         </div>
       </div>
       <div className="quick">

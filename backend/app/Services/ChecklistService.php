@@ -121,7 +121,7 @@ class ChecklistService
             'Licenciamento' => $truck->license_expires_at,
         ]);
 
-        $expired = $dates->filter(fn ($date) => $date === null || $date->isPast());
+        $expired = $dates->filter(fn ($date) => $date === null || $date->lt(Carbon::today()));
 
         if ($expired->isEmpty()) {
             $next = $dates->sort()->first();

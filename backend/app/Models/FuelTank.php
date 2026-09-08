@@ -29,6 +29,11 @@ class FuelTank extends Model
         return round(((float) $this->current_liters / (float) $this->capacity_liters) * 100, 1);
     }
 
+    public function remainingCapacity(): float
+    {
+        return max(0, (float) $this->capacity_liters - (float) $this->current_liters);
+    }
+
     public function isCritical(): bool
     {
         return $this->percent() < 20;
